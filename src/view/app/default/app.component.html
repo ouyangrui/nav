@@ -20,7 +20,7 @@
     </nav>
   </header>
   
-  <div class="wrapper">
+  <div class="wrapper" *ngIf="websiteList[page]">
     <nav class="children-nav" *ngIf="websiteList[page].nav.length > 1">
       <a
         class="tag" 
@@ -32,7 +32,7 @@
       </a>
     </nav>
     <ul>
-      <li *ngFor="let item of websiteList[page].nav[id].nav">
+      <li *ngFor="let item of currentList">
         <h2 class="block-title" *ngIf="item.title">
           {{ item.title }} x {{ item.nav.length }}
         </h2>
@@ -41,8 +41,9 @@
             <a [href]="el.url" target="_blank">
               <div class="top">
                 <app-logo
-                  [src]="el.icon"
+                  [src]="el.icon || ''"
                   [name]="el.name"
+                  [size]="30"
                 >
                 </app-logo>
                 <em class="name" [title]="el.name">{{ el.name }}</em>

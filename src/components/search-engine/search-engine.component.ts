@@ -1,29 +1,37 @@
-// Copyright @ 2018-2021 xiejiahe. All rights reserved. MIT license.
+// @ts-nocheck
+// Copyright @ 2018-present xiejiahe. All rights reserved. MIT license.
 
-import hotkeys from 'hotkeys-js'
 import { Component } from '@angular/core'
-import { getDefaultSearchEngine, setDefaultSearchEngine, queryString } from '../../utils'
+import {
+  getDefaultSearchEngine,
+  setDefaultSearchEngine,
+  queryString,
+} from '../../utils'
 import { Router } from '@angular/router'
 import * as searchEngineList from '../../../data/search.json'
 import { ISearchEngineProps } from '../../types'
+import { SearchType } from './index'
+import { $t } from 'src/locale'
 
 @Component({
   selector: 'app-search-engine',
   templateUrl: './search-engine.component.html',
-  styleUrls: ['./search-engine.component.scss']
+  styleUrls: ['./search-engine.component.scss'],
 })
 export class SearchEngineComponent {
+  $t = $t
   searchEngineList: ISearchEngineProps[] = (searchEngineList as any).default
-  currentEngine = getDefaultSearchEngine()
+  currentEngine: ISearchEngineProps = getDefaultSearchEngine()
+  SearchType = SearchType
+  searchTypeValue = SearchType.All
   showEngine = false
   keyword = queryString().q
 
-  constructor (private router: Router) {}
+  constructor(private router: Router) {}
 
   inputFocus() {
     setTimeout(() => {
-      const inputEl = document.getElementById('search-engine-input')
-      inputEl?.focus?.()
+      document.getElementById('search-engine-input')?.focus?.()
     }, 100)
   }
 
@@ -33,14 +41,6 @@ export class SearchEngineComponent {
     document.addEventListener('click', () => {
       this.toggleEngine(null, false)
     })
-
-    hotkeys('enter', () => {
-      this.inputFocus()
-    })
-  }
-
-  ngOnDestroy() {
-    hotkeys.unbind()
   }
 
   toggleEngine(e?: Event, isShow?: boolean) {
@@ -49,9 +49,7 @@ export class SearchEngineComponent {
     if (e) {
       e.stopPropagation()
     }
-    this.showEngine = typeof isShow === 'undefined'
-      ? !this.showEngine
-      : isShow
+    this.showEngine = typeof isShow === 'undefined' ? !this.showEngine : isShow
   }
 
   clickEngineItem(index) {
@@ -65,13 +63,14 @@ export class SearchEngineComponent {
     if (this.currentEngine.url) {
       window.open(this.currentEngine.url + this.keyword)
     }
-    
+
     const params = queryString()
     this.router.navigate([this.router.url.split('?')[0]], {
       queryParams: {
         ...params,
-        q: this.keyword
-      }
+        q: this.keyword,
+        type: this.searchTypeValue,
+      },
     })
   }
 

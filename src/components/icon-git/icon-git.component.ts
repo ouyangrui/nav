@@ -1,7 +1,8 @@
-// Copyright @ 2018-2021 xiejiahe. All rights reserved. MIT license.
+// Copyright @ 2018-present xiejiahe. All rights reserved. MIT license.
 
 import { Component, OnInit } from '@angular/core';
 import config from '../../../nav.config';
+import { settings } from 'src/store'
 
 @Component({
   selector: 'app-icon-git',
@@ -11,7 +12,7 @@ import config from '../../../nav.config';
 export class IconGitComponent implements OnInit {
 
   gitRepoUrl: string = config.gitRepoUrl
-  showGithub = config.showGithub
+  showGithub = settings.showGithub
 
   constructor() { }
 

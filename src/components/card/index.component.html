@@ -1,12 +1,16 @@
 <!-- 网站 -->
-<div class="container">
+<div class="container" *ngIf="cardStyle === 'standard'">
   <nz-card
-    [nzActions]="isLogin ? [actionSetting, actionEdit, actionEllipsis] : [actionSetting, actionEdit]"
+    [nzActions]="
+      isLogin
+        ? [actionCopy, actionShare, actionEllipsis]
+        : [actionCopy, actionShare]
+    "
     nzSize="small"
     nzHoverable
     nzType="inner"
   >
-    <div class="rate">
+    <div class="rate" *ngIf="settings.showRate">
       <nz-rate
         [ngModel]="dataSource.rate"
         [nzDisabled]="!isLogin"
@@ -16,19 +20,26 @@
       </nz-rate>
     </div>
     <a [href]="dataSource.url" target="_blank" rel="noreferer noopener">
-      <nz-card-meta
-        [nzTitle]="title"
-        [nzAvatar]="avatarTemplate"
-      >
+      <nz-card-meta [nzTitle]="title" [nzAvatar]="avatarTemplate">
       </nz-card-meta>
 
-      <div style="opacity: 0;height: 10px;">&nbsp;</div>
+      <div style="opacity: 0; height: 10px">&nbsp;</div>
       <pre class="desc dark-text" [innerHTML]="dataSource.desc"></pre>
     </a>
 
-    <div style="margin-top: 15px;">
-      <nz-tag *ngFor="let key of objectKeys(dataSource.urls)" [nzColor]="tagMap[key].color || '#2db7f5'">
-        <a [href]="dataSource.urls[key]" target="_blank">{{ key }}</a>
+    <div style="margin-top: 15px">
+      <nz-tag
+        *ngFor="let key of objectKeys(dataSource.urls || {})"
+        [nzColor]="(tagMap[key] && tagMap[key].color) || '#2db7f5'"
+        style="margin-bottom: 5px"
+      >
+        <a
+          [href]="dataSource.urls?.[key] || 'javascript:void(0)'"
+          [target]="
+            dataSource.urls?.[key] ? '_blank' : ''
+          "
+          >{{ key }}</a
+        >
       </nz-tag>
     </div>
   </nz-card>
@@ -37,10 +48,13 @@
     <div [innerHTML]="dataSource.name" class="title"></div>
   </ng-template>
   <ng-template #avatarTemplate>
-    <app-logo [src]="dataSource.icon" [name]="dataSource.name"></app-logo>
+    <app-logo [src]="dataSource.icon || ''" [name]="dataSource.name"></app-logo>
   </ng-template>
-  <ng-template #actionSetting>
-    <div nz-tooltip [nzTooltipTitle]="copyUrlDone ? '复制成功' : '复制链接'">
+  <ng-template #actionCopy>
+    <div
+      nz-tooltip
+      [nzTooltipTitle]="copyUrlDone ? $t('_copySuccess') : $t('_copyUrl')"
+    >
       <i
         nz-icon
         [nzType]="copyUrlDone ? 'check' : 'copy'"
@@ -51,8 +65,11 @@
       </i>
     </div>
   </ng-template>
-  <ng-template #actionEdit>
-    <div nz-tooltip [nzTooltipTitle]="copyPathDone ? '复制成功' : '分享网站'">
+  <ng-template #actionShare>
+    <div
+      nz-tooltip
+      [nzTooltipTitle]="copyPathDone ? $t('_copySuccess') : $t('_shareWeb')"
+    >
       <i
         nz-icon
         [nzType]="copyPathDone ? 'check' : 'share-alt'"
@@ -64,31 +81,61 @@
     </div>
   </ng-template>
   <ng-template #actionEllipsis>
-    <i nz-icon nzType="ellipsis" nz-dropdown [nzDropdownMenu]="menu" *ngIf="isLogin"></i>
+    <i
+      nz-icon
+      nzType="ellipsis"
+      nz-dropdown
+      [nzDropdownMenu]="menu"
+      *ngIf="isLogin"
+    ></i>
 
     <nz-dropdown-menu #menu="nzDropdownMenu">
       <ul nz-menu nzSelectable>
-        <li nz-menu-item (click)="toggleModal(); detail = dataSource">编辑</li>
+        <li nz-menu-item (click)="toggleCreateModal()">{{ $t('_edit') }}</li>
+        <li nz-menu-item (click)="handleMove()">{{ $t('_move') }}</li>
         <a
           nz-popconfirm
           nzPopconfirmPlacement="rightTop"
           nzOkType="danger"
-          nzPopconfirmTitle="您确定要删除吗?"
+          [nzPopconfirmTitle]="$t('_confirmDel')"
           nzPopconfirmPlacement="bottom"
-          (nzOnConfirm)="confirmDel($event)"
+          (nzOnConfirm)="confirmDel()"
         >
-          <li nz-menu-item nzDanger>删除</li>
+          <li nz-menu-item nzDanger>{{ $t('_del') }}</li>
         </a>
       </ul>
     </nz-dropdown-menu>
   </ng-template>
+
+  <app-create-web
+    *ngIf="showCreateModal"
+    [visible]="showCreateModal"
+    (onCancel)="toggleCreateModal()"
+    (onOk)="handleUpdateSiteOk($event)"
+    [detail]="dataSource"
+  >
+  </app-create-web>
+
+  <app-move-site
+    #moveSite
+    *ngIf="showMoveModal"
+    [indexs]="indexs"
+    [visible]="showMoveModal"
+    (onCancel)="toggleMoveModal()"
+  >
+  </app-move-site>
 </div>
 
-<app-create-web
-  *ngIf="showModal"
-  [visible]="showModal"
-  (onCancel)="toggleModal()"
-  (onOk)="handleOk($event)"
-  [detail]="dataSource"
+<a
+  [href]="dataSource.url"
+  target="_blank"
+  rel="noreferer noopener"
+  class="container example2 ellipsis dark-bg dark-white"
+  *ngIf="cardStyle === 'example'"
 >
-</app-create-web>
+  <app-logo [src]="dataSource.icon || ''" [name]="dataSource.name"></app-logo>
+  <div class="right-box" [title]="dataSource.__desc__ || dataSource.desc">
+    <div class="title ellipsis" [innerHTML]="dataSource.name"></div>
+    <pre class="desc dark-text ellipsis" [innerHTML]="dataSource.desc"></pre>
+  </div>
+</a>

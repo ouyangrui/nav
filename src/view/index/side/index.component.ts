@@ -1,113 +1,126 @@
-// Copyright @ 2018-2021 xiejiahe. All rights reserved. MIT license.
+// @ts-nocheck
+// Copyright @ 2018-present xiejiahe. All rights reserved. MIT license.
 // See https://github.com/xjh22222228/nav
 
-import config from '../../../../nav.config'
 import { Component } from '@angular/core'
 import { Router, ActivatedRoute } from '@angular/router'
-import { INavProps, INavThreeProp, ISearchEngineProps } from '../../../types'
+import { INavProps, INavThreeProp } from 'src/types'
 import {
   fuzzySearch,
   queryString,
   setWebsiteList,
   toggleCollapseAll,
-} from '../../../utils'
-import { websiteList } from '../../../store'
-import { LOGO_CDN } from '../../../constants'
-import * as s from '../../../../data/search.json'
-
-const searchEngineList: ISearchEngineProps[] = (s as any).default
+  matchCurrentList,
+} from 'src/utils'
+import { isLogin } from 'src/utils/user'
+import { websiteList } from 'src/store'
+import { NzIconService } from 'ng-zorro-antd/icon'
+import { settings, searchEngineList } from 'src/store'
 
 @Component({
-  selector: 'app-home',
+  selector: 'app-side',
   templateUrl: './index.component.html',
-  styleUrls: ['./index.component.scss']
+  styleUrls: ['./index.component.scss'],
 })
-export default class HomeComponent {
-  LOGO_CDN = LOGO_CDN
+export default class SideComponent {
+  LOGO_CDN = settings.favicon
   websiteList: INavProps[] = websiteList
   currentList: INavThreeProp[] = []
   id: number = 0
   page: number = 0
-  title: string = config.title.trim().split(/\s/)[0]
-  openIndex = queryString().page
-  contentEl: HTMLElement
+  title: string = settings.title.trim().split(/\s/)[0]
   searchEngineList = searchEngineList
-  marginTop: number = searchEngineList.length > 0 ? 70 : 20
+  isLogin = isLogin
+  settings = settings
+  sliceMax = 1
 
-  constructor (private router: Router, private activatedRoute: ActivatedRoute) {}
+  constructor(
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
+    private iconService: NzIconService
+  ) {
+    if (settings.iconfontUrl) {
+      this.iconService.fetchFromIconfont({
+        scriptUrl: settings.iconfontUrl,
+      })
+    }
+  }
 
   ngOnInit() {
-    const initList = () => {
-      try {
-        if (this.websiteList[this.page] && this.websiteList[this.page]?.nav?.length > 0) {
-          this.currentList = this.websiteList[this.page].nav[this.id].nav
-        } else {
-          this.currentList = []
-        }
-      } catch (error) {
-        this.currentList = []
-      }
-    }
-
     this.activatedRoute.queryParams.subscribe(() => {
       const { id, page, q } = queryString()
       this.page = page
       this.id = id
+      this.sliceMax = 1
 
       if (q) {
         this.currentList = fuzzySearch(this.websiteList, q)
       } else {
-        initList()
+        this.currentList = matchCurrentList()
       }
-
-      setWebsiteList(this.websiteList)
+      setTimeout(() => {
+        this.sliceMax = Number.MAX_SAFE_INTEGER
+      }, 25)
     })
   }
 
-  ngAfterContentInit() {
-    window.addEventListener('scroll', this.scroll)
-  }
-
-  ngOnDestroy() {
-    window.removeEventListener('scroll', this.scroll)
-  }
-
-  scroll() {
-    const y = window.scrollY
-    if (!this.contentEl) {
-      this.contentEl = document.getElementById('content')
-    }
-    if (y > 30) {
-      this.contentEl.classList.add('fixed')
-    } else {
-      this.contentEl.classList.remove('fixed')
-    }
-  }
-
-  handleSidebarNav(page, id) {
+  handleSidebarNav(page: any, id: any) {
     this.websiteList[page].id = id
-    this.router.navigate([this.router.url.split('?')[0]], { 
+    this.router.navigate([this.router.url.split('?')[0]], {
       queryParams: {
         page,
         id,
-      }
+      },
     })
-    window.scrollTo(0, 0)
+    this.handlePositionTop()
   }
 
-  onCollapse = (item, index) => {
+  handlePositionTop() {
+    setTimeout(() => {
+      const el = document.querySelector('.search-header') as HTMLDivElement
+      if (el) {
+        const h = el.offsetHeight
+        window.scroll({
+          top: h,
+          left: 0,
+          behavior: 'smooth',
+        })
+      }
+    }, 30)
+  }
+
+  openMenu(item: any, index: number) {
+    this.websiteList.forEach((data, idx) => {
+      if (idx === index) {
+        data.collapsed = !data.collapsed
+      } else {
+        data.collapsed = false
+      }
+    })
+    setWebsiteList(this.websiteList)
+  }
+
+  onCollapse = (item: any, index: number) => {
     item.collapsed = !item.collapsed
     this.websiteList[this.page].nav[this.id].nav[index] = item
     setWebsiteList(this.websiteList)
   }
 
-  onCollapseAll = () => {
+  onCollapseAll = (e: Event) => {
+    e?.stopPropagation()
     toggleCollapseAll(this.websiteList)
+    this.handlePositionTop()
+  }
+
+  handleJumpUrl(data) {
+    if (data.url) {
+      window.open(data.url)
+    }
   }
 
   collapsed() {
     try {
-      return websiteList[this.page].nav[this.id].collapsed
+      return !!websiteList[this.page].nav[this.id].collapsed
     } catch (error) {
       return false
     }

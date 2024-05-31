@@ -1,28 +1,34 @@
-// Copyright @ 2018-2021 xiejiahe. All rights reserved. MIT license.
+// Copyright @ 2018-present xiejiahe. All rights reserved. MIT license.
 // See https://github.com/xjh22222228/nav
 
-export type ThemeType =
-  | 'Light'
-  | 'Sim'
-  | 'Side'
-  | 'App'
+export type ThemeType = 'Light' | 'Sim' | 'Side' | 'App' | 'Shortcut'
+
+export interface ITagPropValues {
+  name?: string
+  color: string
+  createdAt: string
+  desc: string
+  isInner: boolean
+}
 
 export interface ITagProp {
-  [tagName: string]: {
-    color: string
-    createdAt: string
-    desc?: string
-  }
+  [tagName: string]: ITagPropValues
 }
 
 export interface INavFourProp {
-  icon?: string | null
-  createdAt?: string
-  rate?: number
-  top?: boolean
+  __name__: string | undefined
+  __desc__: string | undefined
   name: string
   desc: string
   url: string
+  icon?: string | null
+  createdAt?: string
+  rate?: number // 0-5
+  top?: boolean
+  index?: number // sort
+  ownVisible?: boolean
+  breadcrumb: string[]
+  ok?: boolean
   urls?: {
     [tagName: string]: string
   }
@@ -33,7 +39,9 @@ export interface INavThreeProp {
   icon?: string | null
   createdAt?: string
   collapsed?: boolean
+  ownVisible?: boolean
   nav: INavFourProp[]
+  [key: string]: any
 }
 
 export interface INavTwoProp {
@@ -41,7 +49,9 @@ export interface INavTwoProp {
   icon?: string | null
   createdAt?: string
   collapsed?: boolean
+  ownVisible?: boolean
   nav: INavThreeProp[]
+  [key: string]: any
 }
 
 export interface INavProps extends Object {
@@ -49,7 +59,10 @@ export interface INavProps extends Object {
   id?: number
   icon?: string | null
   createdAt?: string
+  ownVisible?: boolean
+  collapsed?: boolean
   nav: INavTwoProp[]
+  [key: string]: any
 }
 
 export interface ISearchEngineProps {
@@ -58,28 +71,60 @@ export interface ISearchEngineProps {
   icon: string | null
   placeholder?: string
   blocked: boolean
+  isInner: boolean
+}
+
+export interface ISettings {
+  favicon: string
+  language: 'zh-CN' | 'en'
+  loading: string
+  homeUrl?: string
+  title: string
+  description: string
+  keywords: string
+  theme: ThemeType
+  appTheme: ThemeType
+  footerContent?: string | null
+  headerContent?: string | null
+  baiduStatisticsUrl?: string
+  cnzzStatisticsUrl?: string
+  iconfontUrl?: string
+  showGithub: boolean
+  showLanguage: boolean
+  showCopy: Boolean | undefined
+  showShare: Boolean | undefined
+  showThemeToggle: Boolean
+  actionUrl?: string | null
+  checkUrl?: boolean
+  errorUrlCount?: number
+
+  lightCardStyle: string
+
+  simThemeImages: Record<string, string>[]
+  simThemeDesc: string
+  simThemeHeight: number
+  simThemeAutoplay: boolean
+  simCardStyle: string
+
+  sideThemeImages: Record<string, string>[]
+  sideThemeHeight: number
+  sideThemeAutoplay: boolean
+  sideCardStyle: string
+
+  shortcutThemeImages: Record<string, string>[]
+  shortcutThemeShowWeather: boolean
+
+  showRate: boolean
+  mirrorList: Record<string, string>[]
 }
 
 export interface IConfig {
   gitRepoUrl: string
   branch: string
   hashMode: boolean
-  homeUrl?: string
-  title: string
-  description: string
-  keywords: string
-  theme: ThemeType
-  footerContent?: string|null
-  baiduStatisticsUrl?: string
-  cnzzStatisticsUrl?: string
-  showGithub: boolean
+}
 
-  lightThemeConfig: {
-    backgroundLinear: string[]
-  },
-
-  simThemeConfig: {
-    posterImageUrls: string[]
-    description: string
-  }
+export type internalProps = {
+  loginViewCount: number
+  userViewCount: number
 }

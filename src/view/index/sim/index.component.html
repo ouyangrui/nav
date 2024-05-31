@@ -1,17 +1,41 @@
 <div class="sim">
-  <div *ngIf="posterImageUrls" class="wallpaper" [ngStyle]="{ 'background-image': 'url(' + posterImageUrls + ')' }">
-    <h1 class="title dark-title">{{ title }}</h1>
-    <h2 class="description dark-text-active" [innerHTML]="description"></h2>
-    <app-search-engine></app-search-engine>
+  <div
+    class="wallpaper"
+    *ngIf="settings.simThemeImages.length > 0 && settings.simThemeHeight > 0"
+    [ngStyle]="{ height: settings.simThemeHeight + 'px' }"
+  >
+    <div class="bg">
+      <nz-carousel
+        nzEffect="scrollx"
+        [nzAutoPlay]="settings.simThemeAutoplay"
+        [nzDots]="settings.simThemeImages.length > 1"
+        [nzEnableSwipe]="settings.simThemeImages.length > 1"
+        [nzAutoPlaySpeed]="5000"
+      >
+        <div
+          class="bg-item"
+          nz-carousel-content
+          *ngFor="let item of settings.simThemeImages"
+          [ngStyle]="{ 'background-image': 'url(' + item['src'] + ')' }"
+          (click)="handleJumpUrl(item)"
+        ></div>
+      </nz-carousel>
+    </div>
+
+    <div class="bar">
+      <h1 class="title dark-title">{{ settings.title }}</h1>
+      <h2 class="description dark-text-active" [innerHTML]="description"></h2>
+      <app-search-engine></app-search-engine>
+    </div>
   </div>
 
   <nav class="top-nav user-select-none dark-border-color">
-    <a 
-      *ngFor="let item of websiteList; let i = index;" 
-      [class.active]="page === i" 
-      [class.dark-text-active]="page === i" 
+    <a
+      *ngFor="let item of websiteList; let i = index"
+      [class.active]="page === i"
+      [class.dark-text-active]="page === i"
       class="ripple-btn dark-text"
-      (click)="handleCilckTopNav(i)" 
+      (click)="handleCilckTopNav(i)"
     >
       {{ item.title }}
     </a>
@@ -19,12 +43,12 @@
 
   <div class="wrapper">
     <nav class="sidebar dark-bg" id="sidebar">
-      <div *ngIf="websiteList[page]?.nav?.length > 0">
-        <div 
-          *ngFor="let item of websiteList[page].nav; let i = index" 
-          (click)="handleSidebarNav(i)" 
-          [class.active]="id === i" 
-          [class.dark-item-active]="id === i" 
+      <div *ngIf="websiteList[page]?.nav?.length">
+        <div
+          *ngFor="let item of websiteList[page].nav; let i = index"
+          (click)="handleSidebarNav(i)"
+          [class.active]="id === i"
+          [class.dark-item-active]="id === i"
           class="ripple-btn dark-text"
         >
           {{ item.title }}
@@ -34,13 +58,30 @@
 
     <aside class="site-box dark-bg">
       <div *ngIf="currentList.length > 0; else noData">
-        <div *ngFor="let item of currentList; let i=index">
+        <div *ngFor="let item of currentList.slice(0, sliceMax); let i = index">
           <div class="nav-wrapper">
-            <app-toolbar-title [dataSource]="item" (onCollapse)="onCollapse(item, i)" [index]="i"></app-toolbar-title>
-  
-            <div nz-row [nzGutter]="[16, 16]" [style.display]="item.collapsed ? 'none' : ''">
-              <div class="gutter-row" nz-col [nzSpan]="8" *ngFor="let el of item.nav; let idx=index">
-                <app-card [dataSource]="el"></app-card>
+            <app-toolbar-title
+              [dataSource]="item"
+              (onCollapse)="onCollapse(item, i)"
+              [index]="i"
+            ></app-toolbar-title>
+
+            <div
+              nz-row
+              [nzGutter]="[16, 16]"
+              [style.display]="item.collapsed ? 'none' : ''"
+            >
+              <div
+                class="gutter-row"
+                nz-col
+                [nzSpan]="8"
+                *ngFor="let el of item.nav.slice(0, sliceMax); index as j"
+              >
+                <app-card
+                  [cardStyle]="settings.simCardStyle"
+                  [dataSource]="el"
+                  [indexs]="[page, id, i, j]"
+                ></app-card>
               </div>
             </div>
           </div>
@@ -55,10 +96,7 @@
 </div>
 
 <app-footer className="sim-footer"></app-footer>
-<app-fixbar
-  (onCollapse)="onCollapseAll()"
-  [collapsed]="collapsed()"
->
+<app-fixbar (onCollapse)="onCollapseAll()" [collapsed]="collapsed()">
 </app-fixbar>
 
 <div class="sim-bg dark-bg"></div>
